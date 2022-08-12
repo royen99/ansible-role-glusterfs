@@ -15,10 +15,12 @@
 
 # Installation steps
 - name: ensure required repositories are present
-  package:
-    name: centos-release-gluster{{ glusterfs_version }}
-    state: installed
-  become: true
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: /etc/yum.repos.d
+    mode: '0644'
+  with_items:
+    - el-8-glusterfs{{ glusterfs_version }}.repo
 
 - name: Esnure glusterfs repo is enabled
   ansible.builtin.lineinfile:

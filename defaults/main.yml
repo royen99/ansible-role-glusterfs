@@ -22,4 +22,4 @@ gluster:
 glusterfs_serveroptions:
   {cluster.enable-shared-storage: enable, }
 
-glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/8-stream/storage/x86_64/gluster-10/'
+glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/8-stream/storage/x86_64/gluster-{{ glusterfs_version}}/'
