@@ -1,16 +1,15 @@
 ---
-dependencies: []
 
 galaxy_info:
-  role_name: glusterfs
+  role_name: ansible-role-glusterfs
   author: HASS Team, ING N.V.
-  description: GlusterFS (CE) for RHEL.
+  description: GlusterFS (CE) for RHEL and CentOS
   company: "ING N.V Infra/Cloud/HASS"
-  license: "license (BSD, MIT)"
+  license: "Apache-2.0"
   min_ansible_version: '2.9'
   platforms:
     - name: EL
       versions:
-        - '7'
         - '8'
-        - '9'
+
+dependencies: []

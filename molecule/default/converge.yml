@@ -1,9 +1,0 @@
----
-- name: converge
-  hosts: all
-  become: true
-  gather_facts: true
-
-  tasks:
-    - name: Do nothing yet
-      ansible.builtin.command: id
