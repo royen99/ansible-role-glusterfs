@@ -10,8 +10,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-        with:
-          path: "https://github.com/royen99/ansible-role-glusterfs"
       - name: molecule
         uses: robertdebock/molecule-action@4.0.9
         with:
@@ -30,10 +28,9 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
         with:
-          path: "https://github.com/royen99/ansible-role-glusterfs"
+          path: "${{ github.repository }}"
       - name: molecule
         uses: robertdebock/molecule-action@4.0.9
         with:
           image: "${{ matrix.image }}"
           options: parallel
-          scenario: my_specific_scenario
