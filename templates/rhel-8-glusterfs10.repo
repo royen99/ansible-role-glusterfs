@@ -1,0 +1,5 @@
+[centos-8-gluster10]
+name=centos-8-gluster10
+{{ glusterfs_reposerver }}
+enabled=1
+gpgcheck=0
