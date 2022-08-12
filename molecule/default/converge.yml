@@ -4,5 +4,7 @@
   become: yes
   gather_facts: yes
 
-  roles:
-    - role: ansible-role-glusterfs
+  tasks:
+    - name: Do nothing yet
+      shell: id
+
