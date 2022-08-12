@@ -2,7 +2,7 @@
 
 galaxy_info:
   role_name: glusterfs
-  author: HASS Team, ING N.V.
+  author: royen99
   description: GlusterFS (CE) for RHEL and CentOS
   company: "ING N.V Infra/Cloud/HASS"
   license: "Apache-2.0"
@@ -11,5 +11,7 @@ galaxy_info:
     - name: EL
       versions:
         - '8'
+  galaxy_tags:
+    - glusterfs
 
 dependencies: []
