@@ -1,7 +1,7 @@
 ---
 
 galaxy_info:
-  role_name: ansible-role-glusterfs
+  role_name: glusterfs
   author: HASS Team, ING N.V.
   description: GlusterFS (CE) for RHEL and CentOS
   company: "ING N.V Infra/Cloud/HASS"
