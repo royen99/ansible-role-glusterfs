@@ -1,11 +1,10 @@
 ---
-#
-# Ansible managed
-#
+
 dependency:
   name: galaxy
   options:
     role-file: requirements.yml
+    requirements-file: requirements.yml
 lint: |
   set -e
   yamllint .
