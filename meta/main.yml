@@ -2,7 +2,6 @@
 
 galaxy_info:
   role_name: glusterfs
-  namespace: royen99
   author: HASS Team, ING N.V.
   description: GlusterFS (CE) for RHEL and CentOS
   company: "ING N.V Infra/Cloud/HASS"
