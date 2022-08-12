@@ -1,0 +1,25 @@
+---
+
+# defaults file for ansible-role-glusterfs
+glusterfs_disktype: Virtual disk
+glusterfs_vgname: gfsvg
+glusterfs_vgsize: 10
+glusterfs_defaultvolumesize: 1
+glusterfs_replicas: 3
+glusterfs_poolname: gfspool
+glusterfs_metapoolsize: 1
+
+glusterfs_packages:
+  - glusterfs-server
+  - lvm2
+  - python3-gluster
+
+glusterfs_version: 10
+
+gluster:
+  state: installed
+
+glusterfs_serveroptions:
+  {cluster.enable-shared-storage: enable, }
+
+glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/8-stream/storage/x86_64/gluster-10/'

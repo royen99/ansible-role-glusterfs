@@ -1,0 +1,64 @@
+# Currently only enable
+---
+
+- name: Snapshots need glusterfssharedstorage to be active, so make sure its started
+  service:
+    name: glusterfssharedstorage
+    state: started
+    enabled: True
+
+- name: Initialize the snapshot functionality (can be done safely)  # Should be run on all nodes!
+  command: snap_scheduler.py init
+  delegate_to: "{{ item }}"
+  loop: "{{ ansible_play_hosts }}"
+  loop_control:
+    pause: 2
+  register: snapshotinit
+  until: ("Successfully initialised snapshot scheduler for this node" in snapshotinit.stdout)
+  retries: 10
+  run_once: True
+  delay: 5
+
+- name: Enable User snapshotting if needed
+  command: snap_scheduler.py enable
+  run_once: True
+  register: snapshotenable
+  changed_when: ("Snapshot scheduling is enabled" in snapshotenable.stdout)
+  failed_when: ("Snapshot scheduling is already enabled" not in snapshotenable.stdout) and (snapshotenable.rc != 0)
+
+- name: Check if schedule exists
+  command: snap_scheduler.py list
+  run_once: True
+  register: snap_results
+
+- name: Change snapshot schedule
+  command: 'snap_scheduler.py edit {{ volume.name }}_SNAP "00 {{ volume.snapshot.hour }} * * *" "{{ volume.name }}"'
+  run_once: True
+  when: volume.name ~ "_SNAP" in snap_results.stdout
+
+- name: Add snapshot schedule
+  command: 'snap_scheduler.py add {{ volume.name }}_SNAP "00 {{ volume.snapshot.hour }} * * *" "{{ volume.name }}"'
+  run_once: True
+  when: volume.name ~ "_SNAP" not in snap_results.stdout
+
+- name: Enable user snapshots
+  command: gluster volume set {{ volume.name }} features.uss enable
+  run_once: True
+  changed_when: False
+
+- name: Enable auto-delete snapshots
+  shell: gluster snapshot config auto-delete enable --mode=script
+  run_once: True
+  register: autodeleteenable
+  changed_when: ("auto-delete successfully set" in autodeleteenable.stdout)
+  failed_when: ("auto-delete is already enabled" not in autodeleteenable.stderr) and (autodeleteenable.rc != 0)
+
+- name: Set max snapshots to specified amount
+  shell: gluster snapshot config {{ volume.name }} snap-max-hard-limit {{ volume.snapshot.keep }} --mode=script
+  run_once: True
+  changed_when: False
+
+- name: Set softlimit to 90%
+  shell: gluster snapshot config snap-max-soft-limit 90 --mode=script
+  run_once: True
+  changed_when: False

@@ -1,0 +1,55 @@
+---
+
+- name: Create logical volume.
+  lvol:
+    lv: "{{ volume.name }}"
+    thinpool: "{{ glusterfs_poolname }}"
+    size: "{{ volume.size }}g"
+    vg: "{{ glusterfs_vgname }}"
+
+- name: Format LV with XFS
+  filesystem:
+    dev: "/dev/{{ glusterfs_vgname }}/{{ volume.name }}"
+    fstype: xfs
+    opts: "-i size=512 -n size=8192"
+
+- name: Mount LV as brick
+  mount:
+    name: "/gluster/{{ volume.name }}"
+    src: "/dev/{{ glusterfs_vgname }}/{{ volume.name }}"
+    fstype: xfs
+    opts: "defaults,inode64,noatime"
+    state: mounted
+
+- name: Create brick folder on mountpoint
+  file:
+    path: "/gluster/{{ volume.name }}/export"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Set correct SELinux label on bricks
+  sefcontext:
+    path: "/gluster/{{ volume.name }}'(/.*)?'"
+    setype: glusterd_brick_t
+    state: present
+    reload: yes
+
+- name: Make GlusterFS volumes and set volume options
+  gluster_volume:
+    name: "{{ volume.name }}"
+    arbiters: 1
+    bricks: "/gluster/{{ volume.name }}/export"
+    cluster: "{{ ansible_play_hosts | join(',') }}"
+    force: False
+    state: present
+    replicas: "{{ glusterfs_replicas }}"
+    options: "{{ volume.options | default(glusterfs_volumeoptions | default('')) }}"
+  run_once: True
+
+- name: Ensure GlusterFS volume is started
+  gluster_volume:
+    name: "{{ volume.name }}"
+    state: started
+  run_once: True

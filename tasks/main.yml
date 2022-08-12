@@ -1,0 +1,193 @@
+---
+
+- name: Collect facts
+  setup:
+  tags:
+    - always
+
+- name: Make sure we have 3 nodes
+  assert:
+    that:
+      - "{{ ansible_play_hosts | length }} == 3"
+  run_once: True
+  tags:
+    - always
+
+# Installation steps
+- name: ensure required repositories are present
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: /etc/yum.repos.d
+    mode: '0644'
+  with_items:
+    - rhel-8-glusterfs{{ glusterfs_version }}.repo
+    - rhel-8-codeready.repo
+
+- name: Ensure GlusterFS packages are installed
+  yum:
+    name: "{{ glusterfsinstallpkg }}"
+    state: "{{ gluster.state | default('installed') }}"
+  become: true
+  loop:
+    - "{{ glusterfs_packages }}"
+  loop_control:
+    loop_var: glusterfsinstallpkg
+
+- name: Ensure that some needed services are running
+  service:
+    name: "{{ glusterinstallstart }}"
+    state: started
+    enabled: True
+  become: true
+  loop:
+    - chronyd
+    - glusterd
+  loop_control:
+    loop_var: glusterinstallstart
+
+# Prepare file systems & LVM
+- name: Try to get ansible_lvm variable when not yet present
+  setup:
+    filter: ansible_lvm
+  register: lvmsetup
+  when: ansible_lvm is undefined
+
+- name: Set the fact for LVM
+  set_fact:
+    lvm_disk: []
+
+- name: Check for available disk
+  set_fact:
+    lvm_disk: "{{ lvm_disk }} + [ '/dev/{{ item.key }}' ]"
+  with_dict: "{{ ansible_devices }}"
+  no_log: false
+  any_errors_fatal: true
+  when: (item.value.model == glusterfs_disktype) and (item.value.holders.0 is undefined) and (item.value.partitions|length < 1) and (item.value.sectors|int) >= ( (glusterfs_vgsize|int) * 1024 * 1024 * 2 )
+  tags:
+    - filesystemprep
+
+- name: Get gfsvg existing disks
+  set_fact:
+    lvm_disk: "{{ lvm_disk }} + [ '{{ item.key }}' ]"
+  with_dict: "{{ ansible_lvm.pvs }}"
+  when: item.value.vg == glusterfs_vgname
+
+- name: Show usable disks for GlusterFS
+  debug:
+    msg: "{{ lvm_disk | join(',') }}"
+
+- name: Create a physical volumegroup
+  lvg:
+    vg: "{{ glusterfs_vgname }}"
+    pvs: "{{ lvm_disk | join(',') }}"
+
+- name: Update lvm setup
+  setup:
+    filter: ansible_lvm
+
+- name: Set glusterfs_thinpool_size
+  set_fact:
+    glusterfs_thinpool_size: "{{ (item.value.size_g |int * 0.90) |int }}G"
+  with_dict: "{{ ansible_lvm.vgs }}"
+  when:
+    - item.key == glusterfs_vgname
+
+- name: Create a thin-pool volume
+  lvol:
+    vg: "{{ glusterfs_vgname }}"
+    thinpool: "{{ glusterfs_poolname }}"
+    size: "{{ glusterfs_thinpool_size }}"
+
+# Default RHEL LVM metapool is tiny, so we set it quite larger
+- name: Set metapool size to better value
+  shell: lvextend --poolmetadatasize {{ glusterfs_metapoolsize }}G {{ glusterfs_vgname  }}/{{ glusterfs_poolname }}
+  register: metapoolextend
+  failed_when:
+    - metapoolextend.rc != 0
+    - "'matches existing size' not in metapoolextend.stderr"
+    - "'not larger than existing size' not in metapoolextend.stderr"
+  changed_when:
+    - metapoolextend.rc == 0
+    - "'matches existing size' not in metapoolextend.stderr"
+
+# Make (or ensure) an actual gluster cluster
+- name: Form a cluster.
+  command: "gluster peer probe {{ peernode }}"
+  loop: "{{ ansible_play_hosts | flatten(levels=1) }}"
+  loop_control:
+    loop_var: peernode
+    pause: 2
+  register: glusterpeerprobe
+  run_once: True
+  any_errors_fatal: True
+  changed_when: "'peer probe: success.' in glusterpeerprobe.stdout_lines"
+  when: gluster.volumes is defined
+
+- name: Set server settings
+  shell: "gluster volume set all {{ item.key }} {{ item.value }}"
+  loop: "{{ lookup('dict', glusterfs_serveroptions, wantlist=True) }}"
+  register: settings_result
+  failed_when: 'settings_result.rc > 1 and "already exists" not in settings_result.stderr'
+  changed_when: "settings_result.rc == 0"
+  run_once: True
+  when: gluster.volumes is defined
+
+- name: Place custom scripts for volume checking
+  copy:
+    src: "scripts/{{ item }}"
+    dest: /usr/bin
+    mode: '0755'
+  with_items:
+    - gfapi.py
+    - gfsize.py
+
+# Create new volumes or extend existing ones.
+- name: Check size of volume if a LV already exists
+  shell: /usr/bin/gfsize.py {{ volume.name }}
+  changed_when: False
+  register: lvdisplay
+  run_once: True
+  loop: "{{ gluster.volumes }}"
+  loop_control:
+    loop_var: volume
+  when:
+    - (volume.name in ansible_lvm.lvs)
+
+- name: Display if need to make additional volume
+  debug:
+    msg:
+      - "Existing volume, and we need to add : {{ ((item.volume.size * 1024 * 1024 * 1024 - 1024|int|abs - item.stdout|int|abs) / 1024 / 1024 / 1024)|int }}GB to {{ item.volume.name }} "
+  when:
+    - (item.volume.size is defined)
+    - (item.volume.name in ansible_lvm.lvs)
+    - (((item.volume.size - 1) * 1024 * 1024 * 1024)|int|abs > item.stdout|int|abs)
+  loop: "{{ lvdisplay.results }}"
+
+- name: Call an include playbook to extend a volume
+  include_tasks: extendvolume.yml
+  vars:
+    volume: "{{ item.volume.name }}"
+    addsize: "{{ ((item.volume.size * 1024 * 1024 * 1024 - 1024|int|abs - item.stdout|int|abs) / 1024 / 1024 / 1024)|int }}"
+  when:
+    - (item.volume.size is defined)
+    - (item.volume.name in ansible_lvm.lvs)
+    - (((item.volume.size - 1) * 1024 * 1024 * 1024)|int|abs > item.stdout|int|abs)
+  loop: "{{ lvdisplay.results }}"
+
+- name: Call an include playbook to create a new volume
+  include_tasks: createvolume.yml
+  when:
+    - (volume.size is defined)
+    - (volume.name not in ansible_lvm.lvs)
+  loop: "{{ gluster.volumes }}"
+  loop_control:
+    loop_var: volume
+
+- name: Call an include playbook to define snapshots
+  include_tasks: snapshots.yml
+  when:
+    - (volume.snapshot.state is defined)
+    - (volume.name is defined)
+  loop: "{{ gluster.volumes }}"
+  loop_control:
+    loop_var: volume

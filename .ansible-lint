@@ -1,0 +1,16 @@
+skip_list:
+  - yaml # Violations reported by yamllint
+  - role-name # Role name {0} does not match ``^[a-z][a-z0-9_]+$`` pattern
+  - command-instead-of-shell  # Use shell only when shell functionality is required
+  - risky-shell-pipe  # Shells that use pipes should set the pipefail option
+  - no-changed-when  # Commands should not change things if nothing needs doing.
+  - fqcn-builtins  # Use FQCN for builtin actions
+  - no-jinja-when  # No Jinja2 in when
+  - no-tabs  # Most files should not contain tabs
+  - var-spacing  # Variables should have spaces before and after
+
+warn_list:
+  - experimental  # all rules tagged as experimental
+
+exclude_paths:
+  - requirements.yml
