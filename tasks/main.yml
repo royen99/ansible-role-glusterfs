@@ -21,6 +21,7 @@
     mode: '0644'
   with_items:
     - el-8-glusterfs{{ glusterfs_version }}.repo
+    - PowerTools.repo
 
 - name: Ensure GlusterFS packages are installed
   yum:
