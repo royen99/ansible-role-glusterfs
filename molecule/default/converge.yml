@@ -32,10 +32,5 @@
             hour: 11
             keep: 9
 
-  pre_tasks:
-    - name: Run ansible-role-detect-become-method
-      include_role:
-        name: ansible-role-detect-become-method
-
   roles:
     - role: ansible-role-glusterfs
