@@ -1,0 +1,41 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    molecule: True
+    gluster:
+      volumes:
+        - name: volume1
+          size: 10
+          options:
+            { performance.cache-refresh-timeout: '9',
+              performance.cache-size: 128MB,
+              cluster.server-quorum-type: 'server',
+              write-behind: 'off',
+              quick-read: 'on'
+            }
+          snapshot:
+            state: on
+            hour: 12
+            keep: 7
+        - name: volume2
+          size: 30
+          options:
+            { performance.cache-refresh-timeout: '9',
+              performance.cache-size: 128MB,
+              cluster.server-quorum-type: 'server',
+              write-behind: 'off',
+              quick-read: 'on'
+            }
+          snapshot:
+            state: on
+            hour: 11
+            keep: 9
+
+  pre_tasks:
+    - name: Run ansible-role-detect-become-method
+      include_role:
+        name: ansible-role-detect-become-method
+
+  roles:
+    - role: ansible-role-glusterfs
