@@ -22,12 +22,6 @@
   with_items:
     - el-8-glusterfs{{ glusterfs_version }}.repo
 
-- name: Esnure glusterfs repo is enabled
-  ansible.builtin.lineinfile:
-    path: /etc/yum.repos.d/CentOS-Gluster-{{ glusterfs_version }}.repo
-    regexp: '^enabled='
-    line: enabled=1
-
 - name: Ensure GlusterFS packages are installed
   yum:
     name: "{{ glusterfsinstallpkg }}"
