@@ -2,11 +2,8 @@ name: Molecule
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+    tags_ignore:
+      - '*'
 
 jobs:
   molecule:
