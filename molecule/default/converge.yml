@@ -8,12 +8,11 @@
       - lvm2
       - python3-gluster
     glusterfs_version: 10
-    gluster:
-      state: installed
     glusterfs_serveroptions:
       {cluster.enable-shared-storage: enable, }
     glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/{{ ansible_distribution_major_version }}-stream/storage/x86_64/gluster-{{ glusterfs_version }}/'
     gluster:
+      state: installed
       volumes:
         - name: volume1
           size: 10
