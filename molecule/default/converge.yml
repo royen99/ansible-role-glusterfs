@@ -3,6 +3,16 @@
   become: yes
   vars:
     molecule: True
+    glusterfs_packages:
+      - glusterfs-server
+      - lvm2
+      - python3-gluster
+    glusterfs_version: 10
+    gluster:
+      state: installed
+    glusterfs_serveroptions:
+      {cluster.enable-shared-storage: enable, }
+    glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/{{ ansible_distribution_major_version }}-stream/storage/x86_64/gluster-{{ glusterfs_version }}/'
     gluster:
       volumes:
         - name: volume1
