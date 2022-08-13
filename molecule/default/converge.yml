@@ -58,7 +58,7 @@
     # Installation steps
     - name: ensure required repositories are present
       ansible.builtin.template:
-        src: "{{ item }}"
+        src: "../../{{ item }}"
         dest: /etc/yum.repos.d
         mode: '0644'
       with_items:
