@@ -20,11 +20,22 @@
     dest: /etc/yum.repos.d
     mode: '0644'
   with_items:
-    - el-8-glusterfs{{ glusterfs_version }}.repo
-    - PowerTools.repo
+    - glusterfs{{ glusterfs_version }}.repo
+
+- name: Install EPEL repository and core plugins
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: installed
+  become: true
+  loop:
+    - epel-release
+    - dnf-plugins-core
+
+- name: Enable needed repositories
+  ansible.builtin.command: dnf config-manager --set-enabled powertools
 
 - name: Ensure GlusterFS packages are installed
-  yum:
+  ansible.builtin.package:
     name: "{{ glusterfsinstallpkg }}"
     state: "{{ gluster.state | default('installed') }}"
   become: true
@@ -34,7 +45,7 @@
     loop_var: glusterfsinstallpkg
 
 - name: Ensure that some needed services are running
-  service:
+  ansible.builtin.service:
     name: "{{ glusterinstallstart }}"
     state: started
     enabled: True

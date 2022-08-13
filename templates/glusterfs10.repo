@@ -1,0 +1,5 @@
+[centos-{{ ansible_distribution_major_version }}-gluster10]
+name=centos-{{ ansible_distribution_major_version }}-gluster10
+{{ glusterfs_reposerver }}
+enabled=1
+gpgcheck=0
