@@ -51,7 +51,6 @@
     enabled: True
   become: true
   loop:
-    - chronyd
     - glusterd
   loop_control:
     loop_var: glusterinstallstart
