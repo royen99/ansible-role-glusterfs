@@ -1,0 +1,99 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    molecule: True
+    glusterfs_packages:
+      - glusterfs-server
+      - lvm2
+      - python3-gluster
+    glusterfs_version: 10
+    glusterfs_serveroptions:
+      {cluster.enable-shared-storage: enable, }
+    glusterfs_reposerver: 'baseurl = http://mirror.centos.org/centos/{{ ansible_distribution_major_version }}-stream/storage/x86_64/gluster-{{ glusterfs_version }}/'
+    gluster:
+      state: installed
+      volumes:
+        - name: volume1
+          size: 10
+          options:
+            { performance.cache-refresh-timeout: '9',
+              performance.cache-size: 128MB,
+              cluster.server-quorum-type: 'server',
+              write-behind: 'off',
+              quick-read: 'on'
+            }
+          snapshot:
+            state: on
+            hour: 12
+            keep: 7
+        - name: volume2
+          size: 30
+          options:
+            { performance.cache-refresh-timeout: '9',
+              performance.cache-size: 128MB,
+              cluster.server-quorum-type: 'server',
+              write-behind: 'off',
+              quick-read: 'on'
+            }
+          snapshot:
+            state: on
+            hour: 11
+            keep: 9
+
+  tasks:
+    - name: Collect facts
+      setup:
+      tags:
+        - always
+
+    - name: Make sure we have 3 nodes
+      assert:
+        that:
+          - "{{ ansible_play_hosts | length }} == 3"
+      run_once: True
+      tags:
+        - always
+
+    # Installation steps
+    - name: ensure required repositories are present
+      ansible.builtin.template:
+        src: "../../templates/{{ item }}"
+        dest: /etc/yum.repos.d
+        mode: '0644'
+      with_items:
+        - glusterfs{{ glusterfs_version }}.repo
+
+    - name: Install EPEL repository and core plugins
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: installed
+      become: true
+      loop:
+        - epel-release
+        - dnf-plugins-core
+
+    - name: Enable needed repositories
+      ansible.builtin.command: dnf config-manager --set-enabled powertools
+      changed_when: false
+
+    - name: Ensure GlusterFS packages are installed
+      ansible.builtin.package:
+        name: "{{ glusterfsinstallpkg }}"
+        state: "{{ gluster.state | default('installed') }}"
+      become: true
+      loop:
+        - "{{ glusterfs_packages }}"
+      loop_control:
+        loop_var: glusterfsinstallpkg
+
+    - name: Ensure that some needed services are running
+      ansible.builtin.service:
+        name: "{{ glusterinstallstart }}"
+        state: started
+        enabled: True
+      become: true
+      loop:
+        - glusterd
+      loop_control:
+        loop_var: glusterinstallstart

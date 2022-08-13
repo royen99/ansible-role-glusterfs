@@ -1,6 +1,8 @@
 # Ansible Role Glusterfs
 
-[![Build Status](https://dev.azure.com/INGCDaaS/IngOne/_apis/build/status/P12647/P12647-ansible-role-glusterfs?repoName=PP12647-ansible-role-glusterfs&branchName=master)](https://dev.azure.com/INGCDaaS/IngOne/_build/latest?definitionId=26331&repoName=P12647-ansible-role-glusterfs&branchName=master)
+|GitHub|Quality|Downloads|Version|
+|------|-------|---------|-------|
+|[![github](https://github.com/royen99/ansible-role-glusterfs/workflows/Ansible%20Molecule/badge.svg)](https://github.com/royen99/ansible-role-glusterfs/actions)|[![quality](https://img.shields.io/ansible/quality/22732)](https://galaxy.ansible.com/royen99/glusterfs)|[![downloads](https://img.shields.io/ansible/role/d/22732)](https://galaxy.ansible.com/royen99/glusterfs)|[![Version](https://img.shields.io/github/release/royen99/ansible-role-glusterfs.svg)](https://github.com/royen99/ansible-role-glusterfs/releases/)|
 
 Role to install GlusterFS on the target systems
 
