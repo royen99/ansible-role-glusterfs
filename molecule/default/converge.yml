@@ -75,6 +75,7 @@
 
     - name: Enable needed repositories
       ansible.builtin.command: dnf config-manager --set-enabled powertools
+      changed_when: false
 
     - name: Ensure GlusterFS packages are installed
       ansible.builtin.package:
