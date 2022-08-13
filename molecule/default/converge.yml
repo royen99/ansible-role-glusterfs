@@ -32,5 +32,87 @@
             hour: 11
             keep: 9
 
-  roles:
-    - role: ansible-role-glusterfs
+  tasks:
+    - name: Collect facts
+      setup:
+      tags:
+        - always
+
+    - name: Make sure we have 3 nodes
+      assert:
+        that:
+          - "{{ ansible_play_hosts | length }} == 3"
+      run_once: True
+      tags:
+        - always
+
+    # Installation steps
+    - name: ensure required repositories are present
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: /etc/yum.repos.d
+        mode: '0644'
+      with_items:
+        - glusterfs{{ glusterfs_version }}.repo
+
+    - name: Install EPEL repository and core plugins
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: installed
+      become: true
+      loop:
+        - epel-release
+        - dnf-plugins-core
+
+    - name: Enable needed repositories
+      ansible.builtin.command: dnf config-manager --set-enabled powertools
+
+    - name: Ensure GlusterFS packages are installed
+      ansible.builtin.package:
+        name: "{{ glusterfsinstallpkg }}"
+        state: "{{ gluster.state | default('installed') }}"
+      become: true
+      loop:
+        - "{{ glusterfs_packages }}"
+      loop_control:
+        loop_var: glusterfsinstallpkg
+
+    - name: Ensure that some needed services are running
+      ansible.builtin.service:
+        name: "{{ glusterinstallstart }}"
+        state: started
+        enabled: True
+      become: true
+      loop:
+        - glusterd
+      loop_control:
+        loop_var: glusterinstallstart
+
+    # Prepare file systems & LVM
+    - name: Try to get ansible_lvm variable when not yet present
+      setup:
+        filter: ansible_lvm
+      register: lvmsetup
+      when: ansible_lvm is undefined
+
+    # Make (or ensure) an actual gluster cluster
+    - name: Form a cluster.
+      command: "gluster peer probe {{ peernode }}"
+      loop: "{{ ansible_play_hosts | flatten(levels=1) }}"
+      loop_control:
+        loop_var: peernode
+        pause: 2
+      register: glusterpeerprobe
+      run_once: True
+      any_errors_fatal: True
+      changed_when: "'peer probe: success.' in glusterpeerprobe.stdout_lines"
+      when: gluster.volumes is defined
+
+    - name: Set server settings
+      shell: "gluster volume set all {{ item.key }} {{ item.value }}"
+      loop: "{{ lookup('dict', glusterfs_serveroptions, wantlist=True) }}"
+      register: settings_result
+      failed_when: 'settings_result.rc > 1 and "already exists" not in settings_result.stderr'
+      changed_when: "settings_result.rc == 0"
+      run_once: True
+      when: gluster.volumes is defined
