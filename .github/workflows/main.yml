@@ -24,8 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - image: "rockylinux"
-            tag: "8"
+          - image: "centos"
+            tag: "latest"
 
     steps:
       - name: checkout
