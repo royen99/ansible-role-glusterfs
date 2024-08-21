@@ -24,8 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - image: "enterpriselinux"
-            tag: "9"
+          - image: "rockylinux"
+            tag: "8"
 
     steps:
       - name: checkout
