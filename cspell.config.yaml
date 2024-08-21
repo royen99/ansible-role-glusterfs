@@ -1,0 +1,12 @@
+---
+version: "0.2"
+ignorePaths: []
+dictionaryDefinitions:
+  - name: customDictionary
+    path: ./.cspell-dicts/dictionary.txt
+    addWords: true
+dictionaries:
+  - customDictionary
+words: []
+ignoreWords: []
+import: []
