@@ -3,7 +3,8 @@ dependencies: []
 
 galaxy_info:
   role_name: glusterfs
-  author: dutch.it@gmail.com
+  namespace: dutchit
+  author: 'Nico van Roijen <dutch.it@gmail.com>'
   description: GlusterFS (CE) for RHEL-like systems.
   company: "None"
   license: "license (BSD, MIT)"
