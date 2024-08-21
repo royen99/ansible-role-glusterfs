@@ -14,7 +14,7 @@
     - always
 
 # Installation steps
-- name: ensure required repositories are present
+- name: Ensure required repositories are present
   ansible.builtin.template:
     src: "{{ item }}"
     dest: /etc/yum.repos.d
@@ -110,7 +110,7 @@
 
 # Default RHEL LVM metapool is tiny, so we set it quite larger
 - name: Set metapool size to better value
-  ansible.builtin.shell: lvextend --poolmetadatasize {{ glusterfs_metapoolsize }}G {{ glusterfs_vgname  }}/{{ glusterfs_poolname }}
+  ansible.builtin.shell: lvextend --poolmetadatasize {{ glusterfs_metapoolsize }}G {{ glusterfs_vgname }}/{{ glusterfs_poolname }}
   register: metapoolextend
   failed_when:
     - metapoolextend.rc != 0
@@ -177,7 +177,7 @@
   ansible.builtin.include_tasks: extendvolume.yml
   vars:
     volume: "{{ item.volume.name }}"
-    addsize: "{{ ((item.volume.size * 1024 * 1024 * 1024 - 1024 | int | abs - item.stdout|int|abs) / 1024 / 1024 / 1024) | int }}"
+    addsize: "{{ ((item.volume.size * 1024 * 1024 * 1024 - 1024 | int | abs - item.stdout | int | abs) / 1024 / 1024 / 1024) | int }}"
   when:
     - (item.volume.size is defined)
     - (item.volume.name in ansible_lvm.lvs)
