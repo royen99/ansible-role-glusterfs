@@ -2,7 +2,7 @@
 ---
 
 - name: Snapshots need glusterfssharedstorage to be active, so make sure its started
-  service:
+  ansible.builtin.service:
     name: glusterfssharedstorage
     state: started
     enabled: True

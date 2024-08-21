@@ -5,6 +5,9 @@ skip_list:
   - risky-shell-pipe  # Shells that use pipes should set the pipefail option
   - no-jinja-when  # No Jinja2 in when
   - no-relative-paths  # The src argument should not use a relative path
+  - run-once[task]  # Using run_once may behave differently if strategy is set to free.
+  - no-changed-when  # Commands should not change things if nothing needs doing
+
 
 warn_list:
   - experimental  # all rules tagged as experimental
