@@ -72,7 +72,7 @@
   with_dict: "{{ ansible_devices }}"
   no_log: false
   any_errors_fatal: true
-  when: (item.value.model == glusterfs_disktype) and (item.value.holders.0 is undefined) and (item.value.partitions|length < 1) and (item.value.sectors|int) >= ( (glusterfs_vgsize|int) * 1024 * 1024 * 2 )
+  when: (item.value.model == glusterfs_disktype) and (item.value.holders.0 is undefined) and (item.value.partitions | length < 1) and (item.value.sectors | int) >= ( (glusterfs_vgsize | int) * 1024 * 1024 * 2 )
   tags:
     - filesystemprep
 
@@ -97,7 +97,7 @@
 
 - name: Set glusterfs_thinpool_size
   ansible.builtin.set_fact:
-    glusterfs_thinpool_size: "{{ (item.value.size_g |int * 0.90) |int }}G"
+    glusterfs_thinpool_size: "{{ (item.value.size_g | int * 0.90) | int }}G"
   with_dict: "{{ ansible_lvm.vgs }}"
   when:
     - item.key == glusterfs_vgname

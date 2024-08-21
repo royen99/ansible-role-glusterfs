@@ -41,7 +41,7 @@
     state: present
     reload: yes
 
-- name: make brick name
+- name: Make brick name
   ansible.builtin.set_fact:
     brick: "{% for i in ansible_play_hosts%}\
              {{ i }}:/gluster/{{ addvol }}/export \

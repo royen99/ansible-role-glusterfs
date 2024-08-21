@@ -4,6 +4,7 @@ skip_list:
   - command-instead-of-shell  # Use shell only when shell functionality is required
   - risky-shell-pipe  # Shells that use pipes should set the pipefail option
   - no-jinja-when  # No Jinja2 in when
+  - no-relative-paths  # The src argument should not use a relative path
 
 warn_list:
   - experimental  # all rules tagged as experimental

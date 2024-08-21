@@ -57,7 +57,7 @@
         - always
 
     # Installation steps
-    - name: ensure required repositories are present
+    - name: Ensure required repositories are present
       ansible.builtin.template:
         src: "../../templates/{{ item }}"
         dest: /etc/yum.repos.d
