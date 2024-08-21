@@ -1,25 +1,25 @@
 ---
 
 - name: Generate epoch time
-  set_fact:
+  ansible.builtin.set_fact:
     addvol: "{{ volume }}_{{ ansible_date_time.epoch }}"
   run_once: True
 
 - name: Create additional logical volume.
-  lvol:
+  community.general.lvol:
     lv: "{{ addvol }}"
     thinpool: "{{ glusterfs_poolname }}"
     size: "{{ addsize }}g"
     vg: "{{ glusterfs_vgname }}"
 
 - name: Format the added volume
-  filesystem:
+  community.general.filesystem:
     dev: "/dev/{{ glusterfs_vgname }}/{{ addvol }}"
     fstype: xfs
     opts: "-i size=512 -n size=8192"
 
 - name: Mount added volume
-  mount:
+  ansible.posix.mount:
     name: "/gluster/{{ addvol }}"
     src: "/dev/{{ glusterfs_vgname }}/{{ addvol }}"
     fstype: xfs
@@ -27,7 +27,7 @@
     state: mounted
 
 - name: Create brick folder
-  file:
+  ansible.builtin.file:
     path: "/gluster/{{ addvol }}/export"
     state: directory
     owner: root
@@ -35,22 +35,22 @@
     mode: 0755
 
 - name: Set correct label on bricks
-  sefcontext:
+  community.general.sefcontext:
     path: "/gluster/{{ addvol }}'(/.*)?'"
     setype: glusterd_brick_t
     state: present
     reload: yes
 
 - name: make brick name
-  set_fact:
+  ansible.builtin.set_fact:
     brick: "{% for i in ansible_play_hosts%}\
              {{ i }}:/gluster/{{ addvol }}/export \
             {% endfor %}"
 
 - name: Add the newly made bricks to the gluster volume
-  shell: gluster volume add-brick {{ volume }} replica {{ glusterfs_replicas }} arbiter 1 {{ brick  }} --mode=script
+  ansible.builtin.shell: gluster volume add-brick {{ volume }} replica {{ glusterfs_replicas }} arbiter 1 {{ brick  }} --mode=script
   run_once: True
 
 - name: When a volume is extended, start a rebalance operation
-  shell: gluster volume rebalance {{ volume }} start --mode=script
+  ansible.builtin.shell: gluster volume rebalance {{ volume }} start --mode=script
   run_once: True
