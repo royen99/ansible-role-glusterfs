@@ -2,3 +2,8 @@
 
 roles:
   - name: robertdebock.bootstrap
+
+collections:
+  - gluster.gluster
+  - ansible.posix
+  - community.general
