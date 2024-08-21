@@ -54,7 +54,7 @@
   failed_when: ("auto-delete is already enabled" not in autodeleteenable.stderr) and (autodeleteenable.rc != 0)
 
 - name: Set max snapshots to specified amount
-  sansible.builtin.hell: gluster snapshot config {{ volume.name }} snap-max-hard-limit {{ volume.snapshot.keep }} --mode=script
+  ansible.builtin.hell: gluster snapshot config {{ volume.name }} snap-max-hard-limit {{ volume.snapshot.keep }} --mode=script
   run_once: True
   changed_when: False
 
