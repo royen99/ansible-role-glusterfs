@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Converge
+  hosts: all
   become: yes
   vars:
     molecule: True
@@ -43,12 +44,12 @@
 
   tasks:
     - name: Collect facts
-      setup:
+      ansible.builtin.setup:
       tags:
         - always
 
     - name: Make sure we have 3 nodes
-      assert:
+      ansible.builtin.assert:
         that:
           - "{{ ansible_play_hosts | length }} == 3"
       run_once: True
